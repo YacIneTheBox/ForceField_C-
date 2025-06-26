@@ -4,7 +4,6 @@
 
 using namespace std;
 
-void drawStar();
 Vector2 CalculFunctionLinear(float mouseX, float mouseY, float starX, float starY);
 
 const int MAX_STARS = 200;
@@ -14,8 +13,6 @@ const int FPS = 240;
 const int FORCEFIELD_RADIUS = 70;
 const int ATTRACTION_RADIUS = 250;
 
-Color ForceFieldColor = { 0, 255, 0, 100 };
-Color AttractionColor = { 153, 102, 255 , 100 };
 
 
 struct Star {
@@ -24,6 +21,7 @@ struct Star {
 	bool isMoving = false;
 	bool isAttracted = false;
 	Vector2 velocity = {0.0f,0.0f};
+	Color color = WHITE;
 };
 
 int main() {
@@ -33,11 +31,21 @@ int main() {
 	InitWindow(screenWidth, screenHeight, "ForceField");
 	SetTargetFPS(FPS);
 	srand(time(NULL));
+
+	Color ForceFieldColor = { 204, 255, 204, 100 };
+	Color AttractionColor = { 204, 255, 255 , 100 };
+	Color col1 = { 255,255,255,255 };
+	Color col2 = { 255, rand() % 255 + 102, rand() % 102 ,255 };
+
+
 	Star stars[MAX_STARS];
 	for (int i = 0; i < MAX_STARS; i++) {
 		stars[i].x = rand() % screenWidth;
 		stars[i].y = rand() % screenHeight;
 		stars[i].size = rand() % 10 + 5;
+		if (i % 2 == 0) { stars[i].color = col2; }
+			
+		
 	}
 	HideCursor();
 
@@ -54,7 +62,7 @@ int main() {
 				stars[i].isMoving = false;
 			}
 
-			if (CheckCollisionPointCircle(mouse, starLocation, ATTRACTION_RADIUS) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+			if (CheckCollisionPointCircle(mouse, starLocation, ATTRACTION_RADIUS) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) 
 			{ stars[i].isAttracted = true; }
 			else { stars[i].isAttracted = false; }
 		}
@@ -68,15 +76,15 @@ int main() {
 		DrawCircle(mouse.x, mouse.y, ATTRACTION_RADIUS, AttractionColor);
 
 		for (int i = 0; i < MAX_STARS; i++) {
-			if (stars[i].isMoving) {
+			if (stars[i].isMoving) {	// REPULSION
 				Vector2 force = CalculFunctionLinear(mouse.x, mouse.y, stars[i].x, stars[i].y);
 				stars[i].velocity.x += force.x;
 				stars[i].velocity.y += force.y;
 			}
-			if (stars[i].isAttracted) {
+			if (stars[i].isAttracted) { // ATTRACTION
 				Vector2 force = CalculFunctionLinear(mouse.x, mouse.y, stars[i].x, stars[i].y);
-				stars[i].velocity.x += -force.x * 2;
-				stars[i].velocity.y += -force.y * 2;
+				stars[i].velocity.x += -force.x;
+				stars[i].velocity.y += -force.y;
 			}
 
 			// Toujours appliquer la vitesse et friction
@@ -86,7 +94,9 @@ int main() {
 			stars[i].velocity.x *= FRICTION;
 			stars[i].velocity.y *= FRICTION;
 
-			DrawCircleGradient(stars[i].x, stars[i].y, stars[i].size, ORANGE, YELLOW);
+			DrawCircle(stars[i].x, stars[i].y, stars[i].size, stars[i].color);
+
+			
 		}
 
 
