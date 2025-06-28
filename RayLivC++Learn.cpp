@@ -4,17 +4,19 @@
 
 using namespace std;
 
-Vector2 CalculFunctionLinear(float mouseX, float mouseY, float starX, float starY);
+Vector2 CalculFunctionLinear(Vector2 mouse, Vector2 star);
 
-const int MAX_STARS = 200;
+const int MAX_STARS = 400;
 const float STREGTH_IMPACT = 1.5;
 const float FRICTION = 0.95f;
 const int FPS = 240;
 const int FORCEFIELD_RADIUS = 70;
-const int ATTRACTION_RADIUS = 250;
+const int ATTRACTION_RADIUS = 250; 
+const float BRILLANCE = 0.5f;
+const int DEFAULT_BRILLANCE = 170;
 
 
-
+                                     
 struct Star {
 	float x, y;
 	int size;
@@ -32,10 +34,11 @@ int main() {
 	SetTargetFPS(FPS);
 	srand(time(NULL));
 
+
 	Color ForceFieldColor = { 204, 255, 204, 100 };
 	Color AttractionColor = { 204, 255, 255 , 100 };
-	Color col1 = { 255,255,255,255 };
-	Color col2 = { 255, rand() % 255 + 102, rand() % 102 ,255 };
+	Color col1 = { 255,255,255,DEFAULT_BRILLANCE };
+	Color col2 = { 255, rand() % 255 + 102, rand() % 102 ,DEFAULT_BRILLANCE };
 
 
 	Star stars[MAX_STARS];
@@ -50,6 +53,7 @@ int main() {
 	HideCursor();
 
 	while (!WindowShouldClose()) {
+		
 		// update here 
 		Vector2 mouse = GetMousePosition();
 		int i= 0;
@@ -68,7 +72,7 @@ int main() {
 		}
 		
 		
-		////////////////////////////////////
+		////////////////////////////////////  eco
 		BeginDrawing();
 		ClearBackground(BLACK);
 
@@ -76,13 +80,16 @@ int main() {
 		DrawCircle(mouse.x, mouse.y, ATTRACTION_RADIUS, AttractionColor);
 
 		for (int i = 0; i < MAX_STARS; i++) {
+			Vector2 starCoor = { stars[i].x,stars[i].y };
 			if (stars[i].isMoving) {	// REPULSION
-				Vector2 force = CalculFunctionLinear(mouse.x, mouse.y, stars[i].x, stars[i].y);
+				Vector2 force = CalculFunctionLinear(mouse, starCoor);
 				stars[i].velocity.x += force.x;
 				stars[i].velocity.y += force.y;
+
+				stars[i].color.a = 255;
 			}
 			if (stars[i].isAttracted) { // ATTRACTION
-				Vector2 force = CalculFunctionLinear(mouse.x, mouse.y, stars[i].x, stars[i].y);
+				Vector2 force = CalculFunctionLinear(mouse, starCoor);
 				stars[i].velocity.x += -force.x;
 				stars[i].velocity.y += -force.y;
 			}
@@ -91,17 +98,16 @@ int main() {
 			stars[i].x += stars[i].velocity.x;
 			stars[i].y += stars[i].velocity.y;
 			
+			
 			stars[i].velocity.x *= FRICTION;
 			stars[i].velocity.y *= FRICTION;
 
+
+			if (stars[i].color.a > DEFAULT_BRILLANCE) { stars[i].color.a -= BRILLANCE; }
+
 			DrawCircle(stars[i].x, stars[i].y, stars[i].size, stars[i].color);
 
-			
 		}
-
-
-
-		
 		EndDrawing();
 	}
 	CloseWindow();
@@ -110,11 +116,11 @@ int main() {
 	return 0;
 }
 
-Vector2 CalculFunctionLinear(float mouseX, float mouseY, float starX, float starY) {
+Vector2 CalculFunctionLinear(Vector2 mouse, Vector2 star) {
 	Vector2 dir;
 
-	dir.x = starX - mouseX;
-	dir.y = starY - mouseY;
+	dir.x = star.x - mouse.x;
+	dir.y = star.y - mouse.y;
 
 	float length = sqrt(dir.x * dir.x + dir.y * dir.y);
 	if (length == 0) length = 1; // éviter division par zéro
